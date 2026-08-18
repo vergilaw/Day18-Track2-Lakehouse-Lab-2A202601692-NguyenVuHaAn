@@ -1,0 +1,5 @@
+Trong các anti-pattern được đề cập, team mình dễ vướng nhất là **Lake of Orphans** — tình trạng file Parquet nằm lại trên storage mà không thuộc về commit nào trong transaction log. Nghe thì vô hại, nhưng thực tế nó là một quả bom nổ chậm về chi phí.
+
+Team mình thường xuyên chạy các pipeline ETL xử lý dữ liệu lớn. Mỗi lần job bị crash giữa chừng hoặc phải retry, nó để lại một đống file output dở dang trên S3. Vì các file này chưa bao giờ được commit vào Delta log, chúng hoàn toàn vô hình với mọi câu query — không ai biết chúng tồn tại cho đến khi hoá đơn cloud storage tăng vọt vào cuối tháng.
+
+Điều đáng lo hơn là lệnh `VACUUM` không giúp được gì trong trường hợp này. Ở Lab 6 mình đã kiểm chứng: VACUUM chỉ dọn được những file đã từng nằm trong log rồi bị thay thế, còn file orphan thì nó bỏ qua hoàn toàn. Giải pháp thực sự phải là tự quét bằng phép trừ tập hợp — lấy toàn bộ file trên disk trừ đi danh sách file trong log — rồi xoá phần dư ra. Team cần đưa orphan scan vào cron job chạy hàng tuần, nhất là sau mỗi đợt backfill hay migration lớn, thay vì tin rằng hệ thống sẽ tự dọn.

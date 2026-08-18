@@ -91,9 +91,23 @@ def reset_catalog(name: str = "lab") -> None:
 
     Scoped to `name` on purpose — see `_catalog_dir`.
     """
+    import gc
     import shutil
+    import time
 
-    shutil.rmtree(_catalog_dir(name), ignore_errors=True)
+    target = _catalog_dir(name)
+    if not target.exists():
+        return
+    # On Windows, SQLite may still hold a file lock from a previous
+    # catalog() call in the same process.  A gc.collect() closes the
+    # connection so rmtree can succeed.
+    for attempt in range(5):
+        gc.collect()
+        shutil.rmtree(target, ignore_errors=True)
+        if not target.exists():
+            return
+        time.sleep(0.05)
+
 
 
 def namespace(cat, ns: str = "lake"):
