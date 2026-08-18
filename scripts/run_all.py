@@ -17,7 +17,7 @@ NB_DIR = ROOT / "notebooks"
 
 def main() -> int:
     notebooks = sorted(p for p in NB_DIR.glob("*.py") if not p.name.startswith("_"))
-    if not notebooks:z
+    if not notebooks:
         print("No notebooks found.")
         return 1
 
