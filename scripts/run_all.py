@@ -17,17 +17,15 @@ NB_DIR = ROOT / "notebooks"
 
 def main() -> int:
     notebooks = sorted(p for p in NB_DIR.glob("*.py") if not p.name.startswith("_"))
-    if not notebooks:
+    if not notebooks:z
         print("No notebooks found.")
         return 1
 
     print(f"Running {len(notebooks)} notebooks with {sys.executable}\n")
     failures, total = [], 0.0
-    import os
-    env = dict(os.environ, PYTHONIOENCODING="utf-8")
     for nb in notebooks:
         t0 = time.perf_counter()
-        proc = subprocess.run([sys.executable, str(nb)], capture_output=True, text=True, env=env, encoding="utf-8", errors="replace")
+        proc = subprocess.run([sys.executable, str(nb)], capture_output=True, text=True)
         dt = time.perf_counter() - t0
         total += dt
         if proc.returncode == 0:
